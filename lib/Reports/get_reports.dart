@@ -67,6 +67,7 @@ class _ReportsPageState extends State<ReportsPage> {
       backgroundColor:Colors.white,
       appBar: AppBar(
         backgroundColor:Colors.white,
+        leading: IconButton(onPressed: ()=> Navigator.pop(context,), icon: Icon(CupertinoIcons.back,color: Colors.black,)),
 
         centerTitle: true,
         title:  Text('R e c e i v e d   R e p o r t s',style: TextStyle(color: Colors.black,fontSize: 25,fontWeight: FontWeight.bold),),

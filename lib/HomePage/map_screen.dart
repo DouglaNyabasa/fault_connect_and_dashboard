@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:faultconnectdashboard/Authentication/login_page.dart';
+import 'package:faultconnectdashboard/Reports/get_reports.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -92,16 +94,14 @@ class _MapScreenState extends State<MapScreen> {
             ListTile(
               leading: Icon(CupertinoIcons.home,size: 25,),
               title: Text('H o m e',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
-              onTap: () {
-                // Navigate to home page
-              },
+              onTap: () => Navigator.pop(context,),
             ),
             SizedBox(height: 20,),
             ListTile(
               leading: Icon(CupertinoIcons.bell,size: 25,),
               title: Text('R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
               onTap: () {
-                // Navigate to settings page
+                MaterialPageRoute(builder: (context) =>  ReportsPage());
               },
             ),
             SizedBox(height: 20,),
@@ -109,7 +109,7 @@ class _MapScreenState extends State<MapScreen> {
               leading: Icon(Iconsax.logout,size: 25,),
               title: Text('S i g n  o u t',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14),),
               onTap: () {
-                // Handle logout functionality
+                MaterialPageRoute(builder: (context) =>  LoginPage());
               },
             ),
             // Add more list tiles as needed

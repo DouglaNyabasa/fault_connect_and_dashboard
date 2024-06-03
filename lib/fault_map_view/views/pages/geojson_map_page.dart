@@ -133,12 +133,13 @@ class _GeojsonMapPageState extends State<GeojsonMapPage> {
                     markers: [
                       for (LatLng faultPoint in widget.faultPoint) ...[
                         Marker(
-                            point: faultPoint,
-                            child: Icon(
-                              Icons.dangerous_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 30,
-                            ))
+                          point: faultPoint,
+                          child: Icon(
+                            Icons.wrong_location_rounded,
+                            color: Theme.of(context).colorScheme.error,
+                            size: 30,
+                          ),
+                        )
                       ]
                     ],
                   )

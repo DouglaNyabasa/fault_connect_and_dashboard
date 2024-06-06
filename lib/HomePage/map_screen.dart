@@ -1,11 +1,16 @@
+import 'dart:convert';
 import 'dart:math';
-
+import 'package:http/http.dart' as http;
 import 'package:faultconnectdashboard/Authentication/login_page.dart';
 import 'package:faultconnectdashboard/Reports/get_reports.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iconsax/iconsax.dart';
+
+
+import '../Reports/report_response_page.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -20,12 +25,45 @@ class _MapScreenState extends State<MapScreen> {
   late LatLng _origin;
   late LatLng _destination;
   late GoogleMapController _mapController;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String _email = '';
+
 
   @override
   void initState() {
     super.initState();
     _initializeOriginAndDestination();
+    _getEmail();
+    _fetchFaultData();
   }
+
+  Future<void> _getEmail() async {
+    final User? user = _auth.currentUser;
+    if (user != null) {
+      setState(() {
+        _email = user.email ?? '';
+      });
+    }
+  }
+  int _totalFaults = 0;
+  int _pendingFaults = 0;
+  int _resolvedFaults = 0;
+
+
+  Future<void> _fetchFaultData() async {
+    final response = await http.get(Uri.parse('https://api.example.com/faults'));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _totalFaults = data['total'];
+        _pendingFaults = data['pending'];
+        _resolvedFaults = data['resolved'];
+      });
+    } else {
+      // Handle error
+    }
+  }
+
 
   void _initializeOriginAndDestination() {
     // Set the initial values for _origin and _destination
@@ -44,7 +82,9 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Text('Fault Connect Dashboard',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 25)),
+            Text(_email == 'zetdczw@gmail.com'
+                ? 'ZETDC Dashboard' :
+            'Municipality Dashboard',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 25)),
           ],
         ),
         leading: IconButton(
@@ -98,11 +138,11 @@ class _MapScreenState extends State<MapScreen> {
             ),
             SizedBox(height: 20,),
             ListTile(
-              leading: Icon(CupertinoIcons.bell,size: 25,),
-              title: Text('R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
-              onTap: () {
-                MaterialPageRoute(builder: (context) =>  ReportsPage());
-              },
+              leading: Icon(CupertinoIcons.tag,size: 25,),
+              title: Text('A t t e n d    R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
+
+              onTap: () => Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (context) => ReportResponse())),
             ),
             SizedBox(height: 20,),
             ListTile(
@@ -123,6 +163,29 @@ class _MapScreenState extends State<MapScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildFaultTile(
+                        color: Colors.blue.withOpacity(0.8),
+                        title: 'Total Faults',
+                        value: _totalFaults,
+                      ),
+                      _buildFaultTile(
+                        color: Colors.orange.withOpacity(0.8),
+                        title: 'Pending Faults',
+                        value: _pendingFaults,
+                      ),
+                      _buildFaultTile(
+                        color: Colors.green.withOpacity(0.8),
+                        title: 'Resolved Faults',
+                        value: _resolvedFaults,
+                      ),
+                    ],
+                  ),
+                ),
                 Text('Origin'),
                 TextFormField(
                   controller: _originController,
@@ -187,27 +250,36 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ),
                 SizedBox(height: 16.0),
-                ElevatedButton(
-                  onPressed: _updateOriginAndDestination,
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.symmetric(
-                      vertical: 16.0,
-                      horizontal: 24.0,
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _updateOriginAndDestination,
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white, backgroundColor: Theme.of(context).primaryColor,
+                        padding: EdgeInsets.symmetric(
+                          vertical: 16.0,
+                          horizontal: 24.0,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      child: Text('Update Map'),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    textStyle: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  child: Text('Update Map'),
-                ),
+
+
+
+                  ],
+                )
+
               ],
             ),
           ),
+
           Expanded(
             child: GoogleMap(
               onMapCreated: (GoogleMapController controller) {
@@ -253,9 +325,11 @@ class _MapScreenState extends State<MapScreen> {
     final originString = _originController.text.trim();
     final destinationString = _destinationController.text.trim();
 
+
     // Convert the strings to LatLng objects
     final originLatLng = _parseLatLng(originString);
     final destinationLatLng = _parseLatLng(destinationString);
+
 
     // Update the _origin and _destination fields
     setState(() {
@@ -287,4 +361,41 @@ class _MapScreenState extends State<MapScreen> {
     final longitude = double.parse(parts[1].trim());
     return LatLng(latitude, longitude);
   }
+
+  Widget _buildFaultTile({
+    required Color color,
+    required String title,
+    required int value,
+  }) {
+    return Container(
+      width: 110,
+      height: 100,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.0),
+          Text(
+            value.toString(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

@@ -1,47 +1,53 @@
-
-class FaultModel  {
+class FaultModel {
   int? id;
   String? details;
   String? faultCategories;
   String? dateTime;
   String? status;
   String? image;
-  String? location;
+  String? longitude;
+  String? latitude;
   String? recipient;
+  String? updatedStatus;
 
-  FaultModel({
-  this.id,
-  this.details,
-  this.faultCategories,
-  this.dateTime,
-  this.status,
-  this.image,
-  this.location,
-  this.recipient,
-  });
-
+  FaultModel(
+      {this.id,
+        this.details,
+        this.faultCategories,
+        this.dateTime,
+        this.status,
+        this.image,
+        this.longitude,
+        this.latitude,
+        this.recipient,
+        this.updatedStatus,
+      });
 
   FaultModel.fromJson(Map<String, dynamic> json) {
-  id = json['id'];
-  details = json['details'];
-  faultCategories = json['faultCategories'];
-  dateTime = json['dateTime'];
-  status = json['status'];
-  image = json['image'];
-  location = json['location'];
-  recipient = json['recipient'];
+    id = json['id'];
+    details = json['details'];
+    faultCategories = json['faultCategories'];
+    dateTime = json['dateTime'];
+    status = json['status'];
+    image = json['image'];
+    longitude = json['longitude'];
+    latitude = json['latitude'];
+    recipient = json['recipient'];
+    updatedStatus= json['updatedStatus'];
   }
 
   Map<String, dynamic> toJson() {
-  final Map<String, dynamic> data = <String, dynamic>{};
-  data['id'] = id;
-  data['details'] = details;
-  data['faultCategories'] = faultCategories;
-  data['dateTime'] = dateTime;
-  data['status'] = status;
-  data['image'] = image;
-  data['location'] = location;
-  data['recipient'] = recipient;
-  return data;
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['details'] = this.details;
+    data['faultCategories'] = this.faultCategories;
+    data['dateTime'] = this.dateTime;
+    data['status'] = this.status;
+    data['image'] = this.image;
+    data['longitude'] = this.longitude;
+    data['latitude'] = this.latitude;
+    data['recipient'] = this.recipient;
+    data['updatedStatus'] = this.updatedStatus;
+    return data;
   }
-  }
+}

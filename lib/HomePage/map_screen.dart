@@ -34,7 +34,7 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _initializeOriginAndDestination();
     _getEmail();
-    _fetchFaultData();
+    _fetchtotalFaults();
   }
 
   Future<void> _getEmail() async {
@@ -50,17 +50,35 @@ class _MapScreenState extends State<MapScreen> {
   int _resolvedFaults = 0;
 
 
-  Future<void> _fetchFaultData() async {
-    final response = await http.get(Uri.parse('https://api.example.com/faults'));
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _totalFaults = data['total'];
-        _pendingFaults = data['pending'];
-        _resolvedFaults = data['resolved'];
-      });
-    } else {
-      // Handle error
+
+
+
+
+  //    ENTER YOUR IP AADDRESS ON THE URL
+
+  Future<void> _fetchtotalFaults() async {
+    try {
+      // Fetch total reports
+      final totalReportsResponse = await http.get(Uri.parse(_email == 'zetdczw@gmail.com' ? 'http://192.168.43.32:8085/faults/getAllZesaRecieved' : 'http://192.168.43.32:8085/faults/getAllMuniRecieved'));
+      if (totalReportsResponse.statusCode == 200) {
+        _totalFaults = json.decode(totalReportsResponse.body)['count'];
+      }
+
+      // Fetch pending reports
+      final pendingReportsResponse = await http.get(Uri.parse(_email == 'zetdczw@gmail.com' ? 'http://192.168.43.32:8085/faults/getAllZesaPending' : 'http://192.168.43.32:8085/faults/getAllMuniPending'));
+      if (pendingReportsResponse.statusCode == 200) {
+        _pendingFaults = json.decode(pendingReportsResponse.body)['count'];
+      }
+
+      // Fetch resolved reports
+      final resolvedReportsResponse = await http.get(Uri.parse(_email == 'zetdczw@gmail.com' ? 'http://192.168.43.32:8085/faults/getAllZesaResolved' : 'http://192.168.43.32:8085/faults/getAllMuniResolved'));
+      if (resolvedReportsResponse.statusCode == 200) {
+        _resolvedFaults = json.decode(resolvedReportsResponse.body)['count'];
+      }
+
+      setState(() {});
+    } catch (e) {
+      print('Error fetching report counts: $e');
     }
   }
 
@@ -171,17 +189,17 @@ class _MapScreenState extends State<MapScreen> {
                       _buildFaultTile(
                         color: Colors.blue.withOpacity(0.8),
                         title: 'Total Faults',
-                        value: _totalFaults,
+                        count: _totalFaults,
                       ),
                       _buildFaultTile(
                         color: Colors.orange.withOpacity(0.8),
                         title: 'Pending Faults',
-                        value: _pendingFaults,
+                        count: _pendingFaults,
                       ),
                       _buildFaultTile(
                         color: Colors.green.withOpacity(0.8),
                         title: 'Resolved Faults',
-                        value: _resolvedFaults,
+                        count: _resolvedFaults,
                       ),
                     ],
                   ),
@@ -365,7 +383,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildFaultTile({
     required Color color,
     required String title,
-    required int value,
+    required  int count,
   }) {
     return Container(
       width: 110,
@@ -386,7 +404,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
           SizedBox(height: 8.0),
           Text(
-            value.toString(),
+            count.toString(),
             style: TextStyle(
               color: Colors.white,
               fontSize: 24.0,

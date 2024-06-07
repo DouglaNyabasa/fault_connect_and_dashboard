@@ -44,7 +44,7 @@ class _ReportResponseState extends State<ReportResponse> {
 
     try {
       // 'http://10.160.1.201:8085/file/create'
-      final response = await http.get(Uri.parse( _email == 'zetdczw@gmail.com'  ?'http://10.160.1.201:8085/faults/getAllZesa' : 'http://10.160.1.201:8085/faults/getAllMuni' ));
+      final response = await http.get(Uri.parse( _email == 'zetdczw@gmail.com'  ?'http://192.168.43.32:8085/faults/getAllZesa' : 'http://192.168.43.32:8085/faults/getAllMuni' ));
 
       if (response.statusCode == 200) {
         final List<dynamic> reportData = jsonDecode(response.body);

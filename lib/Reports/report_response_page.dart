@@ -123,39 +123,7 @@ class _ReportResponseState extends State<ReportResponse> {
     }
   }
 
-  // void _updateReportStatus(FaultModel report) async {
-  //
-  //   final newStatus = await showDialog<String>(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: Text('Update Report Status'),
-  //       content: TextField(
-  //         controller: TextEditingController(text: report.updatedStatus ?? report.status),
-  //         decoration: InputDecoration(
-  //           hintText: 'Enter new status',
-  //         ),
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(),
-  //           child: Text('Cancel'),
-  //         ),
-  //         TextButton(
-  //           onPressed: () => updateReportStatus,
-  //           child: Text('Update'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  //
-  //   if (newStatus != null) {
-  //
-  //     setState(() {
-  //       report.updatedStatus = newStatus;
-  //     });
-  //     await updateReportStatus(report as String);
-  //   }
-  // }
+
 
 
   @override

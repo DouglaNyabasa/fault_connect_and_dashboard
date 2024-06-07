@@ -16,10 +16,53 @@ class ReportResponse extends StatefulWidget {
 }
 
 class _ReportResponseState extends State<ReportResponse> {
-  List<FaultModel> reports = [];
   bool isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _email = '';
+
+  List<FaultModel> reports = [
+    FaultModel(
+      id: 1,
+      details: 'Report 1',
+      status: 'received',
+    ),
+    FaultModel(
+      id: 2,
+      details: 'Report 2',
+      status: 'pending',
+    ),
+    FaultModel(
+      id: 3,
+      details: 'Report 3',
+      status: 'resolved',
+    ),
+  ];
+
+  FaultModel? selectedReport;
+
+  Future<void> updateReportStatus(String newStatus) async {
+    if (selectedReport != null) {
+      final url = Uri.parse('http://192.168.43.32:8085/faults/update/${selectedReport!.id}');
+      final response = await http.put(
+        url,
+        body: jsonEncode({'updatedStatus': newStatus}),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          selectedReport!.updatedStatus = newStatus;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Report status updated successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update report status')),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -80,69 +123,40 @@ class _ReportResponseState extends State<ReportResponse> {
     }
   }
 
-  void _updateReportStatus(FaultModel report) async {
-    // Show a dialog or bottom sheet to get the new status from the user
-    final newStatus = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Update Report Status'),
-        content: TextField(
-          controller: TextEditingController(text: report.updatedStatus ?? report.status),
-          decoration: InputDecoration(
-            hintText: 'Enter new status',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => updateReportStatus,
-            child: Text('Update'),
-          ),
-        ],
-      ),
-    );
+  // void _updateReportStatus(FaultModel report) async {
+  //
+  //   final newStatus = await showDialog<String>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text('Update Report Status'),
+  //       content: TextField(
+  //         controller: TextEditingController(text: report.updatedStatus ?? report.status),
+  //         decoration: InputDecoration(
+  //           hintText: 'Enter new status',
+  //         ),
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.of(context).pop(),
+  //           child: Text('Cancel'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () => updateReportStatus,
+  //           child: Text('Update'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  //
+  //   if (newStatus != null) {
+  //
+  //     setState(() {
+  //       report.updatedStatus = newStatus;
+  //     });
+  //     await updateReportStatus(report as String);
+  //   }
+  // }
 
-    if (newStatus != null) {
-      // Update the report status in the list and on the server
-      setState(() {
-        report.updatedStatus = newStatus;
-      });
-      await updateReportStatus(report);
-    }
-  }
-
-  Future<void> updateReportStatus(FaultModel report) async {
-    try {
-      final response = await http.put(
-        Uri.parse('http://10.160.1.201:8085/faults/update/${report.id}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(report.toJson()),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Report status updated successfully'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update report status'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      print('Error updating report status: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,44 +178,45 @@ class _ReportResponseState extends State<ReportResponse> {
         itemCount: reports.length,
         itemBuilder: (context, index) {
           final report = reports[index];
-          return GestureDetector(
-            onLongPress: () => _updateReportStatus(report),
-            child: Card(
-              elevation: 4.0,
-              margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          report.faultCategories ?? '',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8.0),
-                        Text('Details: ${report.details ?? ''}'),
-                        SizedBox(height: 8.0),
-                        Text('Date: ${report.dateTime ?? ''}'),
-                        SizedBox(height: 8.0),
-                        Text('Status: ${report.updatedStatus ?? report.status}'), // Use the updated status if available
-                        SizedBox(height: 8.0),
-                        Text('Longitude: ${report.longitude ?? ''}'),
-                        SizedBox(height: 8.0),
-                        Text('Latitude: ${report.latitude ?? ''}'),
-                        SizedBox(height: 8.0),
-                        Text('Recipient: ${report.recipient ?? ''}'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          return ListTile(
+            title: Text(report.details!),
+            subtitle: Text(report.updatedStatus ?? report.status!),
+            onLongPress: () {
+              setState(() {
+                selectedReport = report;
+              });
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        title: Text('Set to Received'),
+                        onTap: () {
+                          updateReportStatus('received');
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      ListTile(
+                        title: Text('Set to Pending'),
+                        onTap: () {
+                          updateReportStatus('pending');
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      ListTile(
+                        title: Text('Set to Resolved'),
+                        onTap: () {
+                          updateReportStatus('resolved');
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           );
         },
       ),

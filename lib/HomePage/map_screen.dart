@@ -157,6 +157,14 @@ class _MapScreenState extends State<MapScreen> {
             SizedBox(height: 20,),
             ListTile(
               leading: Icon(CupertinoIcons.tag,size: 25,),
+              title: Text('A l l   R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
+
+              onTap: () => Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (context) => ReportPage())),
+            ),
+            SizedBox(height: 20,),
+            ListTile(
+              leading: Icon(CupertinoIcons.tag,size: 25,),
               title: Text('A t t e n d    R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
 
               onTap: () => Navigator.of(context)

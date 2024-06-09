@@ -3,14 +3,16 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:faultconnectdashboard/Authentication/login_page.dart';
 import 'package:faultconnectdashboard/Reports/get_reports.dart';
+import 'package:faultconnectdashboard/fault_map_view/models/data/geojson_files.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:iconsax/iconsax.dart';
 
-
 import '../Reports/report_response_page.dart';
+import '../fault_map_view/views/pages/geojson_map_page.dart';
+import 'package:latlong2/latlong.dart' as latLng;
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -28,7 +30,6 @@ class _MapScreenState extends State<MapScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _email = '';
 
-
   @override
   void initState() {
     super.initState();
@@ -45,33 +46,38 @@ class _MapScreenState extends State<MapScreen> {
       });
     }
   }
+
   int _totalFaults = 0;
   int _pendingFaults = 0;
   int _resolvedFaults = 0;
-
-
-
-
-
 
   //    ENTER YOUR IP AADDRESS ON THE URL
 
   Future<void> _fetchtotalFaults() async {
     try {
       // Fetch total reports
-      final totalReportsResponse = await http.get(Uri.parse(_email == 'zetdczw@gmail.com' ? 'http://192.168.43.32:8085/faults/getAllZesaRecieved' : 'http://192.168.43.32:8085/faults/getAllMuniRecieved'));
+      final totalReportsResponse = await http.get(Uri.parse(
+          _email == 'zetdczw@gmail.com'
+              ? 'http://192.168.43.32:8085/faults/getAllZesaRecieved'
+              : 'http://192.168.43.32:8085/faults/getAllMuniRecieved'));
       if (totalReportsResponse.statusCode == 200) {
         _totalFaults = json.decode(totalReportsResponse.body)['count'];
       }
 
       // Fetch pending reports
-      final pendingReportsResponse = await http.get(Uri.parse(_email == 'zetdczw@gmail.com' ? 'http://192.168.43.32:8085/faults/getAllZesaPending' : 'http://192.168.43.32:8085/faults/getAllMuniPending'));
+      final pendingReportsResponse = await http.get(Uri.parse(
+          _email == 'zetdczw@gmail.com'
+              ? 'http://192.168.43.32:8085/faults/getAllZesaPending'
+              : 'http://192.168.43.32:8085/faults/getAllMuniPending'));
       if (pendingReportsResponse.statusCode == 200) {
         _pendingFaults = json.decode(pendingReportsResponse.body)['count'];
       }
 
       // Fetch resolved reports
-      final resolvedReportsResponse = await http.get(Uri.parse(_email == 'zetdczw@gmail.com' ? 'http://192.168.43.32:8085/faults/getAllZesaResolved' : 'http://192.168.43.32:8085/faults/getAllMuniResolved'));
+      final resolvedReportsResponse = await http.get(Uri.parse(
+          _email == 'zetdczw@gmail.com'
+              ? 'http://192.168.43.32:8085/faults/getAllZesaResolved'
+              : 'http://192.168.43.32:8085/faults/getAllMuniResolved'));
       if (resolvedReportsResponse.statusCode == 200) {
         _resolvedFaults = json.decode(resolvedReportsResponse.body)['count'];
       }
@@ -82,7 +88,6 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-
   void _initializeOriginAndDestination() {
     // Set the initial values for _origin and _destination
     _origin = LatLng(37.7749, -122.4194);
@@ -92,28 +97,36 @@ class _MapScreenState extends State<MapScreen> {
     _originController.text = '37.7749, -122.4194';
     _destinationController.text = '34.0522, -118.2437';
   }
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       key: _scaffoldKey,
       appBar: AppBar(
         title: Row(
           children: [
-            Text(_email == 'zetdczw@gmail.com'
-                ? 'ZETDC Dashboard' :
-            'Municipality Dashboard',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 25)),
+            Text(
+                _email == 'zetdczw@gmail.com'
+                    ? 'ZETDC Dashboard'
+                    : 'Municipality Dashboard',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25)),
           ],
         ),
         leading: IconButton(
-          icon: Icon(Iconsax.menu_1,size: 27,),
+          icon: Icon(
+            Iconsax.menu_1,
+            size: 27,
+          ),
           onPressed: () {
             _scaffoldKey.currentState?.openDrawer();
           },
         ),
         actions: [
-
-
           IconButton(
             icon: Icon(CupertinoIcons.bell),
             onPressed: () {
@@ -121,12 +134,32 @@ class _MapScreenState extends State<MapScreen> {
             },
           ),
           IconButton(
-            icon: Icon(CupertinoIcons.person,size: 25,),
+            icon: Icon(
+              CupertinoIcons.person,
+              size: 25,
+            ),
             onPressed: () {
               // Handle search functionality
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.location_on),
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => GeojsonMapPage(
+              geoJSONs: GeojsonFiles.geoJsons,
+              geoJSON: GeojsonFiles.testGeoJson,
+              faultPoint: [
+                // TODO: Add the fault point you want displayed on the map. You can add more than one point.
+
+                latLng.LatLng(-18.11318504, 30.12295226),
+                latLng.LatLng(-18.11318504, 30.13296226),
+              ],
+            ),
+          ));
+        },
       ),
       drawer: Drawer(
         child: ListView(
@@ -142,7 +175,6 @@ class _MapScreenState extends State<MapScreen> {
                       width: 250,
                     ),
                   ),
-
                 ],
               ),
               decoration: BoxDecoration(
@@ -150,32 +182,68 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(CupertinoIcons.home,size: 25,),
-              title: Text('H o m e',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
-              onTap: () => Navigator.pop(context,),
+              leading: Icon(
+                CupertinoIcons.home,
+                size: 25,
+              ),
+              title: Text('H o m e',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+              onTap: () => Navigator.pop(
+                context,
+              ),
             ),
-            SizedBox(height: 20,),
+            SizedBox(
+              height: 20,
+            ),
             ListTile(
-              leading: Icon(CupertinoIcons.bell,size: 25,),
-              title: Text('A l l   R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
-
+              leading: Icon(
+                CupertinoIcons.bell,
+                size: 25,
+              ),
+              title: Text('A l l   R e p o r t s',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
               onTap: () => Navigator.of(context)
                   .push(MaterialPageRoute(builder: (context) => ReportPage())),
             ),
-            SizedBox(height: 20,),
-            ListTile(
-              leading: Icon(CupertinoIcons.tag,size: 25,),
-              title: Text('A t t e n d    R e p o r t s',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14)),
-
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => ReportResponse())),
+            SizedBox(
+              height: 20,
             ),
-            SizedBox(height: 20,),
             ListTile(
-              leading: Icon(Iconsax.logout,size: 25,),
-              title: Text('S i g n  o u t',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 14),),
+              leading: Icon(
+                CupertinoIcons.tag,
+                size: 25,
+              ),
+              title: Text('A t t e n d    R e p o r t s',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+              onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ReportResponse())),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ListTile(
+              leading: Icon(
+                Iconsax.logout,
+                size: 25,
+              ),
+              title: Text(
+                'S i g n  o u t',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14),
+              ),
               onTap: () {
-                MaterialPageRoute(builder: (context) =>  LoginPage());
+                MaterialPageRoute(builder: (context) => LoginPage());
               },
             ),
             // Add more list tiles as needed
@@ -281,7 +349,8 @@ class _MapScreenState extends State<MapScreen> {
                     ElevatedButton(
                       onPressed: _updateOriginAndDestination,
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).primaryColor,
                         padding: EdgeInsets.symmetric(
                           vertical: 16.0,
                           horizontal: 24.0,
@@ -296,16 +365,11 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       child: Text('Update Map'),
                     ),
-
-
-
                   ],
                 )
-
               ],
             ),
           ),
-
           Expanded(
             child: GoogleMap(
               onMapCreated: (GoogleMapController controller) {
@@ -351,11 +415,9 @@ class _MapScreenState extends State<MapScreen> {
     final originString = _originController.text.trim();
     final destinationString = _destinationController.text.trim();
 
-
     // Convert the strings to LatLng objects
     final originLatLng = _parseLatLng(originString);
     final destinationLatLng = _parseLatLng(destinationString);
-
 
     // Update the _origin and _destination fields
     setState(() {
@@ -391,7 +453,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildFaultTile({
     required Color color,
     required String title,
-    required  int count,
+    required int count,
   }) {
     return Container(
       width: 110,
@@ -423,5 +485,4 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
   }
-
 }
